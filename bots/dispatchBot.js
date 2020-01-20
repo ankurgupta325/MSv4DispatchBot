@@ -4,6 +4,7 @@
 const { ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 const {CustomPromptBot } = require('../dialogs/customPromptBot')
+const {MakeReservationDialog } = require('../dialogs/makeReservationDialog')
 const CONVERSATION_DATA_PROPERTY = 'conversationData';
 var conversationData = "";
 
@@ -24,6 +25,7 @@ class DispatchBot extends ActivityHandler {
         this.conversationData = conversationState.createProperty(CONVERSATION_DATA_PROPERTY);
 
         this.customPromoptDialog = new CustomPromptBot(this.conversationState,this.conversationData,this.userState);
+        this.makeReservationDialog = new MakeReservationDialog(this.conversationState,this.conversationData,this.userState);
         // If the includeApiResults parameter is set to true, as shown below, the full response
         // from the LUIS api will be made available in the properties  of the RecognizerResult
         const dispatchRecognizer = new LuisRecognizer({
@@ -52,18 +54,36 @@ this.onMessage(async (context, next) => {
             const recognizerResult = await dispatchRecognizer.recognize(context);
 
             // Top intent tell us which cognitive service to use.
+            console.log("LUIS ALL RESULTS### ",recognizerResult)
             const intent = LuisRecognizer.topIntent(recognizerResult);
 
-            console.log('Running dialog with Message Activity.');
+            // Use Below calls if you want to handle dispatching query to QnAMaker OR LUIS directly by picking best confidence score
+            // const intentWithScore = recognizerResult.luisResult.topScoringIntent;
+            // console.log("LUIS TOP RESULTS### ",intentWithScore['intent'])
+            // console.log("LUIS TOP RESULTS### ",intentWithScore['score'])
+            // const results = await this.qnaMaker.getAnswers(context);
+            // console.log("QNA RESULT##  ", results[0].score)
+            // console.log("QNA RESULT##  ", results[0].answer)
+            // console.log('Running dialog with Message Activity.');
+
+            /* if ( results[0].score > intentWithScore['score'])  
+            {
+
+                //Send request to QNAMAKER 
+            }
+            else
+            {
+
+                Run Dialog matching the LUIS intent 
+            }
+
+            */
+
 
             // Run the Dialog with the new message Activity.
           //  await this.dialog.run(context, this.dialogState);
           conversationData = await this.conversationData.get(
-            context, { promptActive: false, endDialog: true });
-         
-       
-
-
+          context, { promptActive: false, endDialog: true });
           console.log("Intent recognized:  " +intent);
           console.log("11. Converssation State from last response "+ JSON.stringify(conversationData.promptActive));
           console.log("11. End Dialog State from last response "+ JSON.stringify(conversationData.endDialog));
@@ -121,18 +141,18 @@ else if (conversationData.promptActive == true) {
     async dispatchToTopIntentAsync(context, intent, recognizerResult) {
         //console.log(context)
         switch (intent) {
-        case 'test':
+        case 'GetInvoiceInfo':
             conversationData.promptActive = true;
             await this.customPromoptDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.customPromoptDialog.isDialogCompleted();
             break;    
-        //case 'OnboardAlteryx':
-        //    await this.processHomeAutomation(context, recognizerResult.luisResult);
-        //    break;
-        case 'l_Weather':
-            await this.processWeather(context, recognizerResult.luisResult);
-            break;
+
         case 'OnboardAlteryx':
+            conversationData.promptActive = true;
+            await this.makeReservationDialog.run(context,this.dialogState,this.conversationData)
+            conversationData.endDialog = await this.makeReservationDialog.isDialogCompleted();
+            break;  
+        case 'QNA':
             await this.processSampleQnA(context);
             break;
         default:

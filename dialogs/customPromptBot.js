@@ -21,6 +21,8 @@ const NUMBER_PROMPT = 'NUMBER_PROMPT';
 const USER_PROFILE = 'USER_PROFILE';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 var endDialog = false;
+const { SomeOtherDialog, SOME_OTHER_DIALOG } = require('./someOtherDialog');
+const { EndDialog, END_DIALOG } = require('./endDialog');
 
 class CustomPromptBot extends ComponentDialog {
     
@@ -35,9 +37,13 @@ class CustomPromptBot extends ComponentDialog {
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
         this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
         this.addDialog(new NumberPrompt(NUMBER_PROMPT, this.agePromptValidator));
+        this.addDialog(new SomeOtherDialog());
+        this.addDialog(new EndDialog());
+
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
             this.transportStep.bind(this),
+            this.exitStep.bind(this),
             this.nameStep.bind(this),
             this.nameConfirmStep.bind(this),
             this.ageStep.bind(this),
@@ -71,12 +77,38 @@ class CustomPromptBot extends ComponentDialog {
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
             prompt: 'Please provide the type of issue with mpaas?',
-            choices: ChoiceFactory.toChoices(['Bug', 'Enhancement', 'Downtime'])
+            choices: ChoiceFactory.toChoices(['Bug', 'Enhancement', 'Downtime','None of these'])
         });
     }
+          
+    async exitStep(step) {
+        step.values.transport = step.result.value;
+
+        console.log(JSON.stringify(step.result.value))
+
+        if(step.result.value == "None of these" )
+        {
+            return await step.replaceDialog(END_DIALOG);
+            //return await step.prompt(END_CONFIRM_PROMPT, 'Do you want to end current topic and start over?', ['yes', 'no']);
+
+
+        }
+        else
+        {
+        console.log("1111")
+        return await step.next();
+        }
+       
+        // We can send messages to the user at any point in the WaterfallStep.
+        //await step.context.sendActivity(`Thanks ${ step.result }.`);
+
+        // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
+      //  return await step.prompt(END_CONFIRM_PROMPT, 'Do you want to end current topic and start over?', ['yes', 'no']);
+    }
+
 
     async nameStep(step) {
-        step.values.transport = step.result.value;
+        //step.values.transport = step.result.value;
         return await step.prompt(NAME_PROMPT, `Which application in mpaas have the issue? `);
     }
 

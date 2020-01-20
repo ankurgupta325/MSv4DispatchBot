@@ -44,7 +44,7 @@ class DispatchBot extends ActivityHandler {
         this.dispatchRecognizer = dispatchRecognizer;
         this.qnaMaker = qnaMaker;
 
-        this.onMessage(async (context, next) => {
+this.onMessage(async (context, next) => {
            // console.log(this.dialogState)
             console.log('Processing Message Activity.');
 
@@ -93,6 +93,7 @@ else if (conversationData.promptActive == true) {
 
             
         });
+
   this.onDialog(async (context, next) => {
             // Save any state changes. The load happened during the execution of the Dialog.
             await this.conversationState.saveChanges(context, false);
@@ -120,7 +121,7 @@ else if (conversationData.promptActive == true) {
     async dispatchToTopIntentAsync(context, intent, recognizerResult) {
         //console.log(context)
         switch (intent) {
-        case 'OnboardAlteryx':
+        case 'test':
             conversationData.promptActive = true;
             await this.customPromoptDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.customPromoptDialog.isDialogCompleted();
@@ -131,7 +132,7 @@ else if (conversationData.promptActive == true) {
         case 'l_Weather':
             await this.processWeather(context, recognizerResult.luisResult);
             break;
-        case 'q_sample-qna':
+        case 'OnboardAlteryx':
             await this.processSampleQnA(context);
             break;
         default:

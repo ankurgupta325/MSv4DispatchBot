@@ -5,6 +5,7 @@ const { ActivityHandler } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 const {CustomPromptBot } = require('../dialogs/customPromptBot')
 const {MakeReservationDialog } = require('../dialogs/makeReservationDialog')
+const {CancelReservationDialog } = require('../dialogs/cancelReservationDialog')
 const CONVERSATION_DATA_PROPERTY = 'conversationData';
 var conversationData = "";
 
@@ -26,6 +27,7 @@ class DispatchBot extends ActivityHandler {
 
         this.customPromoptDialog = new CustomPromptBot(this.conversationState,this.conversationData,this.userState);
         this.makeReservationDialog = new MakeReservationDialog(this.conversationState,this.conversationData,this.userState);
+        this.cancelReservationDialog = new CancelReservationDialog(this.conversationState,this.conversationData,this.userState);
         // If the includeApiResults parameter is set to true, as shown below, the full response
         // from the LUIS api will be made available in the properties  of the RecognizerResult
         const dispatchRecognizer = new LuisRecognizer({
@@ -47,7 +49,7 @@ class DispatchBot extends ActivityHandler {
         this.qnaMaker = qnaMaker;
 
 this.onMessage(async (context, next) => {
-           // console.log(this.dialogState)
+           console.log(this.dialogState)
             console.log('Processing Message Activity.');
 
             // First, we use the dispatch model to determine which cognitive service (LUIS or QnA) to use.
@@ -58,13 +60,17 @@ this.onMessage(async (context, next) => {
             const intent = LuisRecognizer.topIntent(recognizerResult);
 
             // Use Below calls if you want to handle dispatching query to QnAMaker OR LUIS directly by picking best confidence score
-            // const intentWithScore = recognizerResult.luisResult.topScoringIntent;
-            // console.log("LUIS TOP RESULTS### ",intentWithScore['intent'])
-            // console.log("LUIS TOP RESULTS### ",intentWithScore['score'])
-            // const results = await this.qnaMaker.getAnswers(context);
-            // console.log("QNA RESULT##  ", results[0].score)
-            // console.log("QNA RESULT##  ", results[0].answer)
-            // console.log('Running dialog with Message Activity.');
+             const intentWithScore = recognizerResult.luisResult.topScoringIntent;
+             console.log("LUIS TOP RESULTS### ",intentWithScore['intent'])
+             console.log("LUIS TOP RESULTS### ",intentWithScore['score'])
+             const results = await this.qnaMaker.getAnswers(context);
+             console.log("QNA RESULTS##",JSON.stringify(results))
+             if(results.length >= 1)
+             {
+             console.log("QNA RESULT##  ", results[0].score)
+             console.log("QNA RESULT##  ", results[0].answer)
+             }
+             console.log('Running dialog with Message Activity.');
 
             /* if ( results[0].score > intentWithScore['score'])  
             {
@@ -149,7 +155,7 @@ else if (conversationData.promptActive == true) {
            
             await this.customPromoptDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.customPromoptDialog.isDialogCompleted();
-                        if (conversationData.endDialog == true)
+            if (conversationData.endDialog == true)
             {
                 await this.conversationData.set(
                     context, { promptActive: false, endDialog: true });
@@ -157,7 +163,7 @@ else if (conversationData.promptActive == true) {
             break;    
 
         case 'OnboardAlteryx':
-            conversationData.promptActive = true;
+           
             await this.makeReservationDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.makeReservationDialog.isDialogCompleted();
             if (conversationData.endDialog == true)
@@ -166,6 +172,16 @@ else if (conversationData.promptActive == true) {
                     context, { promptActive: false, endDialog: true });
             }
             break;  
+        case 'GetQuarterInfo':
+            
+            await this.cancelReservationDialog.run(context,this.dialogState,this.conversationData)
+            conversationData.endDialog = await this.cancelReservationDialog.isDialogCompleted();
+            if (conversationData.endDialog == true)
+            {
+                await this.conversationData.set(
+                    context, { promptActive: false, endDialog: true });
+            }
+            break;     
         case 'QNA':
             await this.processSampleQnA(context);
             break;

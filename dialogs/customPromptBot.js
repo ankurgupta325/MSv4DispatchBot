@@ -26,19 +26,21 @@ const { EndDialog, END_DIALOG } = require('./endDialog');
 
 class CustomPromptBot extends ComponentDialog {
     
-    constructor(userState, logger) {
+    constructor(conversationState,conversationData,userState) {
         super('userProfileDialog');
 
+        this.conversationState = conversationState;
+        this.conversationData = conversationData;
+        this.userState = userState;
         this.userProfile = userState.createProperty(USER_PROFILE);
-
-        this.logger = logger;
+        
 
         this.addDialog(new TextPrompt(NAME_PROMPT));
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
         this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
         this.addDialog(new NumberPrompt(NUMBER_PROMPT, this.agePromptValidator));
-        this.addDialog(new SomeOtherDialog());
-        this.addDialog(new EndDialog());
+        this.addDialog(new SomeOtherDialog(this.conversationState,this.conversationData,this.userState));
+        this.addDialog(new EndDialog(this.conversationState,this.conversationData,this.userState));
 
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [

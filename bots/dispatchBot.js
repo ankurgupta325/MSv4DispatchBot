@@ -84,6 +84,8 @@ this.onMessage(async (context, next) => {
           //  await this.dialog.run(context, this.dialogState);
           conversationData = await this.conversationData.get(
           context, { promptActive: false, endDialog: true });
+
+
           console.log("Intent recognized:  " +intent);
           console.log("11. Converssation State from last response "+ JSON.stringify(conversationData.promptActive));
           console.log("11. End Dialog State from last response "+ JSON.stringify(conversationData.endDialog));
@@ -96,6 +98,8 @@ if(conversationData.promptActive == false && conversationData.endDialog == true)
 console.log("No previous convo active.Sending request to current intent recognized");
 this.previousRecognizerResult = recognizerResult;
 this.previousIntent = intent;
+await this.conversationData.set(
+    context, { promptActive: true, endDialog: false });
 
  // Go to current intent recognized and we call the dispatcher with the top intent.
  await this.dispatchToTopIntentAsync(context, intent, recognizerResult);
@@ -142,15 +146,25 @@ else if (conversationData.promptActive == true) {
         //console.log(context)
         switch (intent) {
         case 'GetInvoiceInfo':
-            conversationData.promptActive = true;
+           
             await this.customPromoptDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.customPromoptDialog.isDialogCompleted();
+                        if (conversationData.endDialog == true)
+            {
+                await this.conversationData.set(
+                    context, { promptActive: false, endDialog: true });
+            }
             break;    
 
         case 'OnboardAlteryx':
             conversationData.promptActive = true;
             await this.makeReservationDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.makeReservationDialog.isDialogCompleted();
+            if (conversationData.endDialog == true)
+            {
+                await this.conversationData.set(
+                    context, { promptActive: false, endDialog: true });
+            }
             break;  
         case 'QNA':
             await this.processSampleQnA(context);

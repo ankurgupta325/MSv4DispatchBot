@@ -29,12 +29,16 @@ const { EndDialog, END_DIALOG } = require('./endDialog');
 
 class MakeReservationDialog extends ComponentDialog {
     
-    constructor(userState, logger) {
+    constructor(conversationState,conversationData,userState) {
         super('makeReservationDialog');
-
+        
+        this.conversationState = conversationState;
+        this.conversationData = conversationData;
+        this.userState = userState;
         this.userProfile = userState.createProperty(USER_PROFILE);
+        
 
-        this.logger = logger;
+       // this.logger = logger;
 
         this.addDialog(new TextPrompt(TEXT_PROMPT));
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
@@ -42,8 +46,8 @@ class MakeReservationDialog extends ComponentDialog {
         this.addDialog(new NumberPrompt(NUMBER_PROMPT, this.agePromptValidator));
         this.addDialog(new DateTimePrompt(DATETIME_PROMPT));
         //this.addDialog(new DatePrompt(TIME_PROMPT));
-        this.addDialog(new SomeOtherDialog());
-        this.addDialog(new EndDialog());
+        this.addDialog(new SomeOtherDialog(this.conversationState,this.conversationData,this.userState));
+        this.addDialog(new EndDialog(this.conversationState,this.conversationData,this.userState));
 
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
@@ -65,7 +69,7 @@ class MakeReservationDialog extends ComponentDialog {
      * @param {*} turnContext
      * @param {*} accessor
      */
-    async run(turnContext, accessor) {
+    async run(turnContext, accessor,conversationData) {
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
 
@@ -84,8 +88,8 @@ class MakeReservationDialog extends ComponentDialog {
     }
         
     async getName(step) {
-        console.log(step.result.value)
-        if(step.result.value == "no" )
+        console.log("step.result.value 1 :", step.result)
+        if(step.result === false )
           {
         return await step.replaceDialog(END_DIALOG);
            }
@@ -126,7 +130,7 @@ class MakeReservationDialog extends ComponentDialog {
     async confirmStep(step) {
         step.values.time = step.result;
 
-        const msg = `Your reservation details are :\n Number of participants:  ${ step.values.noOfParticipants }\n Date:  ${ step.values.date }\n Time:  ${ step.values.time }.`;
+        const msg = `Your reservation details are :\n Number of participants:  ${ step.values.noOfParticipants }\n Date:  ${ JSON.stringify(step.values.date) }\n Time:  ${ JSON.stringify(step.values.time) }.`;
 
         // We can send messages to the user at any point in the WaterfallStep.
         await step.context.sendActivity(msg);
@@ -136,15 +140,21 @@ class MakeReservationDialog extends ComponentDialog {
     }
 
     async summaryStep(step) {
-        if (step.result.value ="yes") {
+        console.log("step.result.value: 2",step.result)
+        if (step.result === true) {
+            
             // Get the current profile object from user state.
             const userProfile = await this.userProfile.get(step.context, new UserProfile());
+            console.log("step.values.name", step.values.name)
+            console.log("step.values.noOfParticipants", step.values.noOfParticipants)
+            console.log("step.values.date", JSON.stringify(step.values.date))
+            console.log("step.values.time",step.values.time)
 
             userProfile.name = step.values.name;
             userProfile.noOfParticipants = step.values.noOfParticipants;
             userProfile.date = step.values.date;
             userProfile.time = step.values.time;
-
+            console.log("values assigned to userprofile")
          //   let msg = `Reservation confirmed for  ${ userProfile.name } at ${ new Date().getTime() } with following details:\n Number of participants: ${ userProfile.noOfParticipants }\n Rservation date: ${ userProfile.date } \nReservation time : ${ userProfile.time }.`;
            
             endDialog = true;

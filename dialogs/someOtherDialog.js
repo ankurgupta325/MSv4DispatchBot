@@ -5,10 +5,14 @@ const SOME_OTHER_DIALOG = 'SOME_OTHER_DIALOG';
 
 const CHOICE_PROMPT = 'CHOICE_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
+var endDialog = false;
 
 class SomeOtherDialog extends ComponentDialog {
-    constructor() {
+    constructor(conversationState,conversationData,userState) {
         super(SOME_OTHER_DIALOG);
+        this.conversationState = conversationState;
+        this.conversationData = conversationData;
+        this.userState = userState;
 
         // Define a "done" response for the company selection prompt.
         this.doneOption = 'done';

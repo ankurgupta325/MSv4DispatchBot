@@ -1,0 +1,38 @@
+{
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "RichTextBlock",
+                    "inlines": [
+                        {
+                            "type": "TextRun",
+                            "text": "Please enter the date and time of reservation:"
+                        }
+                    ]
+                },
+                {
+                    "id": "Input.date",
+                    "type": "Input.Date"
+                },
+                {
+                    "id": "Input.time",
+                    "type": "Input.Time"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+          "type": "Action.Submit",
+          "title": "Submit",
+          "data": {
+            "x": 13
+          }
+        }
+      ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+}

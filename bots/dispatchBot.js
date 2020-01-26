@@ -286,7 +286,7 @@ this.onMessage(async (context, next) => {
     async dispatchToTopIntentAsync(context, intent, recognizerResult) {
         //console.log(context)
         switch (intent) {
-        case 'GetInvoiceInfo':
+        case 'MakePayment':
            
             await this.customPromoptDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.customPromoptDialog.isDialogCompleted();
@@ -297,7 +297,7 @@ this.onMessage(async (context, next) => {
             }
             break;    
 
-        case 'OnboardAlteryx':
+        case 'Make a Reservation':
            
             await this.makeReservationDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.makeReservationDialog.isDialogCompleted();
@@ -307,7 +307,7 @@ this.onMessage(async (context, next) => {
                     context, { promptActive: false, endDialog: true });
             }
             break;  
-        case 'GetQuarterInfo':
+        case 'CancelRoom':
             
             await this.cancelReservationDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.cancelReservationDialog.isDialogCompleted();

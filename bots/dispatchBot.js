@@ -297,7 +297,7 @@ this.onMessage(async (context, next) => {
             }
             break;    
 
-        case 'Make a Reservation':
+        case 'MakeReservation':
            
             await this.makeReservationDialog.run(context,this.dialogState,this.conversationData)
             conversationData.endDialog = await this.makeReservationDialog.isDialogCompleted();
